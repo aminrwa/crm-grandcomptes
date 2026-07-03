@@ -29,7 +29,7 @@ async function login(userId) {
   const colors = ['#2563eb', '#7c3aed', '#16a34a'];
   document.getElementById('user-info').innerHTML = `
     <div class="user-info-avatar" style="background:${colors[userId % colors.length]}">${initials(currentUser.nom)}</div>
-    <div><div class="user-info-name">${esc(currentUser.nom)}</div><div class="user-info-role">${currentUser.role === 'manager' ? 'Manager' : 'Sales'}</div></div>
+    <div><div class="user-info-name">${esc(currentUser.nom)}</div><div class="user-info-role">Cliquer pour déconnecter</div></div>
   `;
   await loadAll();
   bindNav();
@@ -37,6 +37,16 @@ async function login(userId) {
   bindForms();
   renderCRM();
   renderStats();
+}
+
+function logout() {
+  currentUser = null;
+  comptes = []; clients = []; users = []; evenements = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  // Reset nav
+  document.querySelectorAll('.nav-item').forEach((x, i) => x.classList.toggle('active', i === 0));
+  showView('crm');
 }
 
 async function loadAll() {
