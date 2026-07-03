@@ -144,6 +144,15 @@ function openModalCompte(compte = null) {
     form.nb_praticiens.value = compte.nb_praticiens || '';
     form.prix_licence.value = compte.prix_licence || '';
     form.valeur.value = compte.valeur || '';
+    // Forfait conso
+    const selectConso = document.getElementById('select-forfait-conso');
+    if (selectConso) {
+      selectConso.value = compte.forfait_conso || '';
+      document.getElementById('forfait-special-group').style.display = compte.forfait_conso === 'special' ? 'block' : 'none';
+      if (compte.forfait_conso === 'special' && compte.forfait_conso_special) {
+        document.getElementById('inp-forfait-special').value = compte.forfait_conso_special;
+      }
+    }
     form.commission_sales.value = compte.commission_sales ?? 50;
     form.commission_manager.value = compte.commission_manager ?? 50;
     form.note.value = compte.note || '';
@@ -171,7 +180,11 @@ function bindForfaitCalc() {
   const nbPrat = document.getElementById('inp-nb-prat');
   const prixLicence = document.getElementById('inp-prix-licence');
   const forfait = document.getElementById('inp-forfait');
+  const selectConso = document.getElementById('select-forfait-conso');
+  const specialGroup = document.getElementById('forfait-special-group');
+
   if (!nbPrat || !prixLicence || !forfait) return;
+
   const calc = () => {
     const nb = parseFloat(nbPrat.value) || 0;
     const prix = parseFloat(prixLicence.value) || 0;
@@ -179,6 +192,12 @@ function bindForfaitCalc() {
   };
   nbPrat.addEventListener('input', calc);
   prixLicence.addEventListener('input', calc);
+
+  if (selectConso) {
+    selectConso.addEventListener('change', e => {
+      specialGroup.style.display = e.target.value === 'special' ? 'block' : 'none';
+    });
+  }
 }
 
 function toggleAdoptionFields(val) {
@@ -240,6 +259,8 @@ function bindForms() {
       nb_praticiens: parseInt(form.nb_praticiens.value) || 0,
       prix_licence: parseFloat(form.prix_licence.value) || 0,
       valeur: parseFloat(form.valeur.value) || 0,
+      forfait_conso: form.forfait_conso ? form.forfait_conso.value : '',
+      forfait_conso_special: form.forfait_conso_special ? parseFloat(form.forfait_conso_special.value) || 0 : 0,
       commission_sales: parseInt(form.commission_sales.value) || 50,
       commission_manager: parseInt(form.commission_manager.value) || 50,
       note: form.note.value,
@@ -331,6 +352,9 @@ function cardHTML(c) {
   let cls = 'compte-card';
   if (urgency === 'red') cls += ' urgency-red';
   if (urgency === 'violet') cls += ' urgency-violet';
+  const consoLabels = { '2h': '2h — 60€/mois', '4h': '4h — 120€/mois', '8h': '8h — 240€/mois', 'special': `Spécial — ${fmt(c.forfait_conso_special||0)}€/mois` };
+  const consoLabel = c.forfait_conso ? consoLabels[c.forfait_conso] : null;
+
   return `
   <div class="${cls}" onclick="openFiche(${c.id})">
     <button class="card-delete" onclick="event.stopPropagation();deleteCompte(${c.id})" title="Supprimer">🗑</button>
@@ -343,6 +367,7 @@ function cardHTML(c) {
       ${c.nb_praticiens ? `<span class="card-detail-tag">👨‍⚕️ ${c.nb_praticiens} prat.</span>` : ''}
       ${c.prix_licence ? `<span class="card-detail-tag">🏷 ${fmt(c.prix_licence)} €/prat</span>` : ''}
       ${c.frais_config_prospect ? `<span class="card-detail-tag">⚙️ Config : ${fmt(c.frais_config_prospect)} €</span>` : ''}
+      ${consoLabel ? `<span class="card-detail-tag">📞 ${consoLabel}</span>` : ''}
     </div>
     ${trialHTML}
     <div class="card-people">

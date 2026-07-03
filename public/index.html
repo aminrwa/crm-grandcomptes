@@ -274,9 +274,25 @@
         </div>
         <div class="form-row">
           <div class="form-group small"><label>Prix de licence (€/prat)</label><input type="number" name="prix_licence" placeholder="0" id="inp-prix-licence" /></div>
-          <div class="form-group">
-            <label>Forfait estimé (€/mois)</label>
+            <div class="form-group">
+            <label>Forfait licence estimé (€/mois)</label>
             <input type="number" name="valeur" id="inp-forfait" placeholder="Calculé automatiquement" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Forfait consommation</label>
+          <select name="forfait_conso" id="select-forfait-conso">
+            <option value="">— Choisir un forfait —</option>
+            <option value="2h">2h — 60 €/mois</option>
+            <option value="4h">4h — 120 €/mois</option>
+            <option value="8h">8h — 240 €/mois</option>
+            <option value="special">Forfait spécial</option>
+          </select>
+        </div>
+        <div id="forfait-special-group" style="display:none">
+          <div class="form-group">
+            <label>Tarif forfait spécial (€/mois)</label>
+            <input type="number" name="forfait_conso_special" id="inp-forfait-special" placeholder="Ex : 180" />
           </div>
         </div>
         <div class="form-row">
