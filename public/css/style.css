@@ -248,6 +248,13 @@ body { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--ink); bac
 /* HEADER RIGHT */
 .header-right { display: flex; align-items: center; gap: 16px; }
 
+/* GOOGLE CALENDAR BUTTON */
+.btn-gcal { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; color: var(--ink-3); flex-shrink: 0; transition: all .15s; text-decoration: none; }
+.btn-gcal:hover { background: #e8f0fe; border-color: #4285f4; color: #4285f4; }
+.btn-gcal svg { width: 14px; height: 14px; }
+.btn-gcal-full { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; background: #4285f4; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
+.btn-gcal-full:hover { background: #3367d6; }
+
 /* RECAP BUTTON */
 .btn-recap { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; background: var(--ink); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; flex-shrink: 0; }
 .btn-recap:hover { background: var(--ink-2); }
@@ -256,6 +263,9 @@ body { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--ink); bac
 /* RECAP MODAL */
 .modal.modal-recap { width: 640px; max-height: 80vh; }
 .recap-pre { white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 13.5px; line-height: 1.7; color: var(--ink); background: var(--surface); padding: 16px; border-radius: 8px; border: 1px solid var(--border); max-height: 60vh; overflow: auto; }
+
+.card-details { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.card-detail-tag { font-size: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; color: var(--ink-2); }
 
 /* DELETE BUTTON ON CARD */
 .card-delete { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 6px; background: white; border: 1px solid var(--border); cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 13px; color: var(--ink-3); transition: all .15s; z-index: 2; }

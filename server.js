@@ -39,6 +39,9 @@ async function initDB() {
         manager TEXT DEFAULT '',
         commission_sales INTEGER DEFAULT 50,
         commission_manager INTEGER DEFAULT 50,
+        nb_praticiens INTEGER DEFAULT 0,
+        prix_licence NUMERIC DEFAULT 0,
+        frais_config_prospect NUMERIC DEFAULT 0,
         note TEXT DEFAULT '',
         user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         date_creation TEXT
@@ -80,6 +83,13 @@ async function initDB() {
       `);
       console.log('✅ Utilisateur par défaut créé — configurez votre équipe dans l\'onglet Équipe');
     }
+
+    // Migration : ajouter les nouvelles colonnes si elles n'existent pas
+    await client.query(`
+      ALTER TABLE comptes ADD COLUMN IF NOT EXISTS nb_praticiens INTEGER DEFAULT 0;
+      ALTER TABLE comptes ADD COLUMN IF NOT EXISTS prix_licence NUMERIC DEFAULT 0;
+      ALTER TABLE comptes ADD COLUMN IF NOT EXISTS frais_config_prospect NUMERIC DEFAULT 0;
+    `);
 
     console.log('✅ Base de données initialisée');
   } finally {
@@ -166,12 +176,12 @@ app.get('/api/comptes/:id', async (req, res) => {
 
 app.post('/api/comptes', async (req, res) => {
   try {
-    const { nom, secteur, qualification, date_adoption, duree_essai, valeur, sales, manager, commission_sales, commission_manager, note, user_id } = req.body;
+    const { nom, secteur, qualification, date_adoption, duree_essai, valeur, nb_praticiens, prix_licence, frais_config_prospect, sales, manager, commission_sales, commission_manager, note, user_id } = req.body;
     const today = new Date().toISOString().split('T')[0];
     const { rows } = await pool.query(
-      `INSERT INTO comptes (nom, secteur, qualification, date_adoption, duree_essai, valeur, sales, manager, commission_sales, commission_manager, note, user_id, date_creation)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-      [nom, secteur||'', qualification||'interet', date_adoption||null, duree_essai||15, valeur||0, sales||'', manager||'', commission_sales||50, commission_manager||50, note||'', user_id||null, today]
+      `INSERT INTO comptes (nom, secteur, qualification, date_adoption, duree_essai, valeur, nb_praticiens, prix_licence, frais_config_prospect, sales, manager, commission_sales, commission_manager, note, user_id, date_creation)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+      [nom, secteur||'', qualification||'interet', date_adoption||null, duree_essai||15, valeur||0, nb_praticiens||0, prix_licence||0, frais_config_prospect||0, sales||'', manager||'', commission_sales||50, commission_manager||50, note||'', user_id||null, today]
     );
     res.json(rows[0]);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -179,11 +189,12 @@ app.post('/api/comptes', async (req, res) => {
 
 app.put('/api/comptes/:id', async (req, res) => {
   try {
-    const { nom, secteur, qualification, date_adoption, duree_essai, valeur, sales, manager, commission_sales, commission_manager, note } = req.body;
+    const { nom, secteur, qualification, date_adoption, duree_essai, valeur, nb_praticiens, prix_licence, frais_config_prospect, sales, manager, commission_sales, commission_manager, note } = req.body;
     const { rows } = await pool.query(
       `UPDATE comptes SET nom=$1, secteur=$2, qualification=$3, date_adoption=$4, duree_essai=$5, valeur=$6,
-       sales=$7, manager=$8, commission_sales=$9, commission_manager=$10, note=$11 WHERE id=$12 RETURNING *`,
-      [nom, secteur||'', qualification||'interet', date_adoption||null, duree_essai||15, valeur||0, sales||'', manager||'', commission_sales||50, commission_manager||50, note||'', req.params.id]
+       nb_praticiens=$7, prix_licence=$8, frais_config_prospect=$9,
+       sales=$10, manager=$11, commission_sales=$12, commission_manager=$13, note=$14 WHERE id=$15 RETURNING *`,
+      [nom, secteur||'', qualification||'interet', date_adoption||null, duree_essai||15, valeur||0, nb_praticiens||0, prix_licence||0, frais_config_prospect||0, sales||'', manager||'', commission_sales||50, commission_manager||50, note||'', req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Compte introuvable' });
     res.json(rows[0]);

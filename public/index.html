@@ -269,7 +269,17 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Valeur estimée (€)</label><input type="number" name="valeur" placeholder="0" /></div>
+          <div class="form-group small"><label>Frais de config (€)</label><input type="number" name="frais_config_prospect" placeholder="0" /></div>
+          <div class="form-group small"><label>Nombre de praticiens</label><input type="number" name="nb_praticiens" placeholder="0" min="1" id="inp-nb-prat" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group small"><label>Prix de licence (€/prat)</label><input type="number" name="prix_licence" placeholder="0" id="inp-prix-licence" /></div>
+          <div class="form-group">
+            <label>Forfait estimé (€/mois)</label>
+            <input type="number" name="valeur" id="inp-forfait" placeholder="Calculé automatiquement" />
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group small"><label>Commission sales (%)</label><input type="number" name="commission_sales" value="50" /></div>
           <div class="form-group small"><label>Commission manager (%)</label><input type="number" name="commission_manager" value="50" /></div>
         </div>

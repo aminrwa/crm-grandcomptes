@@ -9,6 +9,9 @@ let ficheMois = new Date(), planningMois = new Date();
 document.addEventListener('DOMContentLoaded', async () => {
   const users = await api('/users');
   renderLogin(users);
+  bindModals();
+  bindForms();
+  bindForfaitCalc();
 });
 
 function renderLogin(users) {
@@ -33,8 +36,6 @@ async function login(userId) {
   `;
   await loadAll();
   bindNav();
-  bindModals();
-  bindForms();
   renderCRM();
   renderStats();
 }
@@ -134,12 +135,14 @@ function openModalCompte(compte = null) {
   if (compte) {
     form.nom.value = compte.nom || '';
     form.secteur.value = compte.secteur || '';
-    // Trouver le sales par nom
     const salesUser = users.find(u => u.nom === compte.sales);
     if (salesUser) form.sales_id.value = salesUser.id;
     const mgrUser = users.find(u => u.nom === compte.manager);
     if (mgrUser) form.manager_id_compte.value = mgrUser.id;
     form.qualification.value = compte.qualification || 'interet';
+    form.frais_config_prospect.value = compte.frais_config_prospect || '';
+    form.nb_praticiens.value = compte.nb_praticiens || '';
+    form.prix_licence.value = compte.prix_licence || '';
     form.valeur.value = compte.valeur || '';
     form.commission_sales.value = compte.commission_sales ?? 50;
     form.commission_manager.value = compte.commission_manager ?? 50;
@@ -162,6 +165,21 @@ function openModalCompte(compte = null) {
 }
 
 document.getElementById('select-qual').addEventListener('change', e => toggleAdoptionFields(e.target.value));
+
+// Calcul automatique du forfait estimé
+function bindForfaitCalc() {
+  const nbPrat = document.getElementById('inp-nb-prat');
+  const prixLicence = document.getElementById('inp-prix-licence');
+  const forfait = document.getElementById('inp-forfait');
+  if (!nbPrat || !prixLicence || !forfait) return;
+  const calc = () => {
+    const nb = parseFloat(nbPrat.value) || 0;
+    const prix = parseFloat(prixLicence.value) || 0;
+    if (nb && prix) forfait.value = nb * prix;
+  };
+  nbPrat.addEventListener('input', calc);
+  prixLicence.addEventListener('input', calc);
+}
 
 function toggleAdoptionFields(val) {
   document.getElementById('adoption-fields').style.display = val === 'adoption' ? 'block' : 'none';
@@ -218,11 +236,14 @@ function bindForms() {
       qualification: form.qualification.value,
       date_adoption: form.date_adoption ? form.date_adoption.value : '',
       duree_essai: parseInt(form.duree_essai ? form.duree_essai.value : 15) || 15,
-      valeur: parseInt(form.valeur.value) || 0,
+      frais_config_prospect: parseFloat(form.frais_config_prospect.value) || 0,
+      nb_praticiens: parseInt(form.nb_praticiens.value) || 0,
+      prix_licence: parseFloat(form.prix_licence.value) || 0,
+      valeur: parseFloat(form.valeur.value) || 0,
       commission_sales: parseInt(form.commission_sales.value) || 50,
       commission_manager: parseInt(form.commission_manager.value) || 50,
       note: form.note.value,
-      user_id: salesId  // Le compte appartient au sales sélectionné
+      user_id: salesId
     };
     if (editingCompteId) {
       await api(`/comptes/${editingCompteId}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -317,7 +338,12 @@ function cardHTML(c) {
       <div><div class="card-name">${esc(c.nom)}</div><div class="card-secteur">${esc(c.secteur || '—')}</div></div>
       <span class="qual-badge ${badgeClass}">${badgeLabel}</span>
     </div>
-    <div class="card-value">${fmtK(c.valeur || 0)}<span> €</span></div>
+    <div class="card-value">${fmtK(c.valeur || 0)}<span> €/mois</span></div>
+    <div class="card-details">
+      ${c.nb_praticiens ? `<span class="card-detail-tag">👨‍⚕️ ${c.nb_praticiens} prat.</span>` : ''}
+      ${c.prix_licence ? `<span class="card-detail-tag">🏷 ${fmt(c.prix_licence)} €/prat</span>` : ''}
+      ${c.frais_config_prospect ? `<span class="card-detail-tag">⚙️ Config : ${fmt(c.frais_config_prospect)} €</span>` : ''}
+    </div>
     ${trialHTML}
     <div class="card-people">
       <div class="card-person"><div class="avatar sales">${initials(c.sales)}</div><div><div>${esc(c.sales||'—')}</div><div class="person-role">Sales</div></div><span class="commission-tag">${c.commission_sales||50}%</span></div>
@@ -482,11 +508,14 @@ function renderFicheEvents() {
   list.innerHTML = sorted.map(e => `
     <div class="event-item" onclick="openEventDetail(${e.id})">
       <div class="event-type-bar ${e.type}"></div>
-      <div>
+      <div style="flex:1">
         <div class="event-title">${esc(e.titre)}</div>
         <div class="event-date-time">${formatDate(e.date)}${e.heure ? ' · ' + e.heure : ''}</div>
         ${e.commentaire ? `<div class="event-comment">${esc(e.commentaire)}</div>` : ''}
       </div>
+      <a href="${googleCalendarLink(e)}" target="_blank" onclick="event.stopPropagation()" class="btn-gcal" title="Ajouter à Google Agenda">
+        <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </a>
     </div>`).join('');
 }
 
@@ -500,6 +529,12 @@ function openEventDetail(id) {
     <div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${e.type}</div></div>
     ${e.lieu ? `<div class="detail-row"><div class="detail-label">Lieu</div><div class="detail-val">${esc(e.lieu)}</div></div>` : ''}
     ${e.commentaire ? `<div class="detail-row"><div class="detail-label">Note</div><div class="detail-val">${esc(e.commentaire)}</div></div>` : ''}
+    <div style="margin-top:14px">
+      <a href="${googleCalendarLink(e)}" target="_blank" class="btn-gcal-full">
+        <svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Ajouter à Google Agenda
+      </a>
+    </div>
   `;
   openModal('modal-event-detail');
 }
@@ -576,6 +611,28 @@ async function showPlanEvt(id) {
     ${e.commentaire ? `<div class="detail-row"><div class="detail-label">Note</div><div class="detail-val">${esc(e.commentaire)}</div></div>` : ''}
   `;
   openModal('modal-event-detail');
+}
+
+function googleCalendarLink(evt, compteNom = '') {
+  const title = encodeURIComponent(evt.titre + (compteNom ? ` — ${compteNom}` : ''));
+  const date = (evt.date || '').replace(/-/g, '');
+  const heure = (evt.heure || '').replace(':', '');
+  let dates;
+  if (heure) {
+    // Format: 20260708T140000/20260708T150000
+    const start = `${date}T${heure}00`;
+    // Durée par défaut 1h
+    const h = parseInt(heure.slice(0,2));
+    const m = heure.slice(2);
+    const endH = String(h + 1).padStart(2, '0');
+    const end = `${date}T${endH}${m}00`;
+    dates = `${start}/${end}`;
+  } else {
+    dates = `${date}/${date}`;
+  }
+  const details = encodeURIComponent(evt.commentaire || '');
+  const location = encodeURIComponent(evt.lieu || '');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
 }
 
 // ── SUPPRIMER COMPTE ──────────────────────────────────────
