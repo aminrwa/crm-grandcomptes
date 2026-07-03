@@ -65,7 +65,13 @@
         <h1 class="view-title">Comptes <span id="count-badge" class="badge">0</span></h1>
         <p class="view-sub" id="view-sub-crm">Pipeline en cours</p>
       </div>
-      <div class="header-stats" id="header-stats"></div>
+      <div class="header-right">
+        <div class="header-stats" id="header-stats"></div>
+        <button class="btn-recap" id="btn-recap" onclick="genererRecap()">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Récap équipe
+        </button>
+      </div>
     </header>
     <div class="filters-bar">
       <input type="text" id="search-input" class="search-input" placeholder="Rechercher un compte, sales, secteur…" />
@@ -174,6 +180,22 @@
   </div>
 
 </main>
+</div>
+
+<!-- MODAL RÉCAP -->
+<div class="modal-overlay" id="modal-recap">
+  <div class="modal modal-recap">
+    <div class="modal-header">
+      <h2 class="modal-title">Récap équipe</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-secondary" id="btn-copy-recap" onclick="copyRecap()">Copier</button>
+        <button class="modal-close" data-close="modal-recap">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <pre id="recap-content" class="recap-pre"></pre>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL USER -->

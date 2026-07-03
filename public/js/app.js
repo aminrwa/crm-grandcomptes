@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000/api';
+const API = '/api';
 
 let comptes = [], evenements = [], clients = [], users = [], currentUser = null;
 let editingUserId = null;
@@ -267,6 +267,7 @@ function cardHTML(c) {
   if (urgency === 'violet') cls += ' urgency-violet';
   return `
   <div class="${cls}" onclick="openFiche(${c.id})">
+    <button class="card-delete" onclick="event.stopPropagation();deleteCompte(${c.id})" title="Supprimer">🗑</button>
     <div class="card-top">
       <div><div class="card-name">${esc(c.nom)}</div><div class="card-secteur">${esc(c.secteur || '—')}</div></div>
       <span class="qual-badge ${badgeClass}">${badgeLabel}</span>
@@ -530,6 +531,88 @@ async function showPlanEvt(id) {
     ${e.commentaire ? `<div class="detail-row"><div class="detail-label">Note</div><div class="detail-val">${esc(e.commentaire)}</div></div>` : ''}
   `;
   openModal('modal-event-detail');
+}
+
+// ── SUPPRIMER COMPTE ──────────────────────────────────────
+async function deleteCompte(id) {
+  const c = comptes.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Supprimer le dossier "${c.nom}" ? Cette action est irréversible.`)) return;
+  await api(`/comptes/${id}`, { method: 'DELETE' });
+  await loadAll();
+  renderCRM();
+  renderStats();
+}
+
+// ── RÉCAP ÉQUIPE ──────────────────────────────────────────
+async function genererRecap() {
+  // Charger tous les comptes et users pour avoir la vue manager
+  const allUsers = await api('/users');
+  const allComptes = await api(`/comptes?user_id=${currentUser.id}`);
+
+  const managers = allUsers.filter(u => u.role === 'manager');
+  const salesList = allUsers.filter(u => u.role === 'sales');
+
+  const qualLabels = {
+    interet: 'Intérêt IA — à recontacter',
+    essai: 'Signer pour essai 15j',
+    adoption: 'Adoption en cours'
+  };
+
+  let texte = '';
+
+  // Pour chaque manager, lister ses sales et leurs dossiers
+  for (const mgr of managers) {
+    texte += `${mgr.nom}\n`;
+    const team = salesList.filter(s => s.manager_id === mgr.id);
+
+    for (const sales of team) {
+      const dossiers = allComptes.filter(c => c.user_id === sales.id);
+      if (dossiers.length === 0) continue;
+
+      texte += `${sales.nom}\n\n`;
+      for (const d of dossiers) {
+        texte += `* ${d.nom}`;
+        if (d.secteur) texte += ` – ${d.secteur}`;
+        texte += `.\n`;
+        texte += `* ${qualLabels[d.qualification] || d.qualification}.\n`;
+        if (d.note) texte += `* ${d.note}\n`;
+        texte += `\n`;
+      }
+    }
+
+    // Dossiers directement sous le manager
+    const mgrDossiers = allComptes.filter(c => c.user_id === mgr.id);
+    if (mgrDossiers.length > 0) {
+      for (const d of mgrDossiers) {
+        texte += `* ${d.nom}`;
+        if (d.secteur) texte += ` – ${d.secteur}`;
+        texte += `.\n`;
+        if (d.note) texte += `* ${d.note}\n`;
+        texte += `\n`;
+      }
+    }
+
+    // Sales sans dossiers
+    const salesSansDossier = team.filter(s => !allComptes.some(c => c.user_id === s.id));
+    for (const s of salesSansDossier) {
+      texte += `${s.nom}\nAucun dossier en cours.\n\n`;
+    }
+
+    texte += '\n';
+  }
+
+  document.getElementById('recap-content').textContent = texte.trim();
+  openModal('modal-recap');
+}
+
+function copyRecap() {
+  const text = document.getElementById('recap-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy-recap');
+    btn.textContent = 'Copié !';
+    setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+  });
 }
 
 // ── ADMIN ─────────────────────────────────────────────────
