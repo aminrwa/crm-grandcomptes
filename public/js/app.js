@@ -108,11 +108,27 @@ function openModalCompte(compte = null) {
   form.reset();
   document.getElementById('modal-compte-title').textContent = compte ? 'Modifier le compte' : 'Nouveau compte';
   document.getElementById('submit-compte').textContent = compte ? 'Enregistrer' : 'Créer le compte';
+
+  // Peupler les listes déroulantes depuis les vrais utilisateurs
+  const salesUsers = users.filter(u => u.role === 'sales');
+  const managerUsers = users.filter(u => u.role === 'manager');
+
+  document.getElementById('select-sales-id').innerHTML = salesUsers.map(u =>
+    `<option value="${u.id}">${esc(u.nom)}</option>`
+  ).join('');
+
+  document.getElementById('select-manager-id-compte').innerHTML = managerUsers.map(u =>
+    `<option value="${u.id}">${esc(u.nom)}</option>`
+  ).join('');
+
   if (compte) {
     form.nom.value = compte.nom || '';
     form.secteur.value = compte.secteur || '';
-    form.sales.value = compte.sales || '';
-    form.manager.value = compte.manager || '';
+    // Trouver le sales par nom
+    const salesUser = users.find(u => u.nom === compte.sales);
+    if (salesUser) form.sales_id.value = salesUser.id;
+    const mgrUser = users.find(u => u.nom === compte.manager);
+    if (mgrUser) form.manager_id_compte.value = mgrUser.id;
     form.qualification.value = compte.qualification || 'interet';
     form.valeur.value = compte.valeur || '';
     form.commission_sales.value = compte.commission_sales ?? 50;
@@ -121,7 +137,17 @@ function openModalCompte(compte = null) {
     if (compte.date_adoption) form.date_adoption.value = compte.date_adoption;
     if (compte.duree_essai) form.duree_essai.value = compte.duree_essai;
     toggleAdoptionFields(compte.qualification);
+  } else {
+    // Par défaut, sélectionner l'utilisateur courant si c'est un sales
+    if (currentUser.role === 'sales') {
+      form.sales_id.value = currentUser.id;
+    }
+    // Sélectionner le manager de l'utilisateur courant
+    if (currentUser.role === 'sales' && currentUser.manager_id) {
+      form.manager_id_compte.value = currentUser.manager_id;
+    }
   }
+
   openModal('modal-compte');
 }
 
@@ -167,9 +193,18 @@ document.getElementById('form-convertir').addEventListener('input', () => {
 function bindForms() {
   document.getElementById('form-compte').addEventListener('submit', async () => {
     const form = document.getElementById('form-compte');
+
+    // Récupérer les vrais noms depuis les IDs sélectionnés
+    const salesId = parseInt(form.sales_id.value);
+    const managerId = parseInt(form.manager_id_compte.value);
+    const salesUser = users.find(u => u.id === salesId);
+    const mgrUser = users.find(u => u.id === managerId);
+
     const data = {
-      nom: form.nom.value, secteur: form.secteur.value,
-      sales: form.sales.value, manager: form.manager.value,
+      nom: form.nom.value,
+      secteur: form.secteur.value,
+      sales: salesUser ? salesUser.nom : '',
+      manager: mgrUser ? mgrUser.nom : '',
       qualification: form.qualification.value,
       date_adoption: form.date_adoption ? form.date_adoption.value : '',
       duree_essai: parseInt(form.duree_essai ? form.duree_essai.value : 15) || 15,
@@ -177,7 +212,7 @@ function bindForms() {
       commission_sales: parseInt(form.commission_sales.value) || 50,
       commission_manager: parseInt(form.commission_manager.value) || 50,
       note: form.note.value,
-      user_id: currentUser.id
+      user_id: salesId  // Le compte appartient au sales sélectionné
     };
     if (editingCompteId) {
       await api(`/comptes/${editingCompteId}`, { method: 'PUT', body: JSON.stringify(data) });
