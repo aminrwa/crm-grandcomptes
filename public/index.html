@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM Grand Comptes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-mark">GC</div>
+      <div class="logo-text">Grand Comptes</div>
+    </div>
+    <h2 class="login-title">Choisissez votre profil</h2>
+    <div id="user-list" class="user-list"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app" style="display:none">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-mark">GC</span>
+    <span class="logo-text">Grand Comptes</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-view="crm">
+      <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      Comptes
+    </a>
+    <a href="#" class="nav-item" data-view="clients">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-7 14c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Clients
+    </a>
+    <a href="#" class="nav-item" data-view="admin">
+      <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3 2.686-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 10l1.5 1.5L18 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Équipe
+    </a>
+    <a href="#" class="nav-item" data-view="planning">
+      <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Planning
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-new" id="btn-nouveau-compte">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Nouveau compte
+    </button>
+    <div class="user-info" id="user-info"></div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- VUE CRM -->
+  <div id="view-crm" class="view active">
+    <header class="view-header">
+      <div>
+        <h1 class="view-title">Comptes <span id="count-badge" class="badge">0</span></h1>
+        <p class="view-sub" id="view-sub-crm">Pipeline en cours</p>
+      </div>
+      <div class="header-stats" id="header-stats"></div>
+    </header>
+    <div class="filters-bar">
+      <input type="text" id="search-input" class="search-input" placeholder="Rechercher un compte, sales, secteur…" />
+      <select id="filter-qual" class="filter-select">
+        <option value="">Toutes les qualifications</option>
+        <option value="interet">Intérêt IA — à recontacter</option>
+        <option value="essai">Signer pour essai 15j</option>
+        <option value="adoption">Adoption en cours</option>
+      </select>
+    </div>
+    <div class="comptes-grid" id="comptes-grid"></div>
+  </div>
+
+  <!-- VUE CLIENTS -->
+  <div id="view-clients" class="view">
+    <header class="view-header">
+      <div>
+        <h1 class="view-title">Clients <span id="clients-badge" class="badge">0</span></h1>
+        <p class="view-sub">Contrats actifs</p>
+      </div>
+      <div class="header-stats" id="clients-stats"></div>
+    </header>
+    <div class="clients-grid" id="clients-grid"></div>
+  </div>
+
+  <!-- VUE FICHE COMPTE -->
+  <div id="view-fiche" class="view">
+    <header class="view-header">
+      <button class="btn-back" id="btn-back">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M13 4L7 10l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Retour
+      </button>
+      <div class="fiche-header-content">
+        <div>
+          <h1 class="view-title" id="fiche-nom"></h1>
+          <div class="fiche-meta" id="fiche-meta"></div>
+        </div>
+        <div class="fiche-actions">
+          <button class="btn-secondary" id="btn-edit-compte">Modifier</button>
+          <button class="btn-success" id="btn-convertir" style="display:none">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Convertir en client
+          </button>
+          <button class="btn-primary" id="btn-add-event">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Ajouter un événement
+          </button>
+        </div>
+      </div>
+    </header>
+    <div id="fiche-adoption-alert" style="display:none"></div>
+    <div class="fiche-body">
+      <div class="fiche-calendar-section">
+        <div class="section-title-row">
+          <h2 class="section-title">Calendrier</h2>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" id="fiche-prev-month">‹</button>
+            <span id="fiche-month-label"></span>
+            <button class="cal-nav-btn" id="fiche-next-month">›</button>
+          </div>
+        </div>
+        <div class="mini-calendar" id="fiche-calendar"></div>
+      </div>
+      <div class="fiche-events-section">
+        <h2 class="section-title">Événements</h2>
+        <div id="fiche-events-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VUE ADMIN ÉQUIPE -->
+  <div id="view-admin" class="view">
+    <header class="view-header">
+      <div>
+        <h1 class="view-title">Équipe</h1>
+        <p class="view-sub">Gérez les membres et leurs rôles</p>
+      </div>
+      <button class="btn-primary" id="btn-nouveau-user">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Ajouter un membre
+      </button>
+    </header>
+    <div class="admin-body" id="admin-body"></div>
+  </div>
+
+  <!-- VUE PLANNING -->
+  <div id="view-planning" class="view">
+    <header class="view-header">
+      <div>
+        <h1 class="view-title">Planning global</h1>
+        <p class="view-sub">Tous les événements</p>
+      </div>
+      <div class="cal-nav large">
+        <button class="cal-nav-btn" id="plan-prev-month">‹</button>
+        <span id="plan-month-label"></span>
+        <button class="cal-nav-btn" id="plan-next-month">›</button>
+      </div>
+    </header>
+    <div class="planning-calendar" id="planning-calendar"></div>
+    <div class="planning-legend">
+      <span class="legend-item rdv">RDV</span>
+      <span class="legend-item important">Important</span>
+      <span class="legend-item relance">Relance</span>
+      <span class="legend-item autre">Autre</span>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODAL USER -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-user-title">Nouveau membre</h2>
+      <button class="modal-close" data-close="modal-user">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-user" onsubmit="return false">
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Prénom et nom *</label>
+          <input type="text" name="nom" required placeholder="Ex : Sophie Bernard" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Rôle *</label>
+          <select name="role" id="select-user-role">
+            <option value="manager">Manager</option>
+            <option value="sales">Sales</option>
+          </select>
+        </div>
+        <div class="form-group" id="manager-select-group" style="margin-bottom:12px;display:none">
+          <label>Manager rattaché *</label>
+          <select name="manager_id" id="select-manager-id"></select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-user">Annuler</button>
+          <button type="submit" class="btn-primary" id="submit-user">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPTE -->
+<div class="modal-overlay" id="modal-compte">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-compte-title">Nouveau compte</h2>
+      <button class="modal-close" data-close="modal-compte">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-compte" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group"><label>Nom de la société *</label><input type="text" name="nom" required placeholder="Ex : Groupe LVMH" /></div>
+          <div class="form-group"><label>Secteur</label><input type="text" name="secteur" placeholder="Ex : Luxe" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Sales assigné *</label><input type="text" name="sales" required placeholder="Prénom Nom" /></div>
+          <div class="form-group"><label>Manager *</label><input type="text" name="manager" required placeholder="Prénom Nom" /></div>
+        </div>
+        <div class="form-group">
+          <label>Qualification *</label>
+          <select name="qualification" id="select-qual" required>
+            <option value="interet">Intérêt IA — à recontacter</option>
+            <option value="essai">Signer pour essai 15j</option>
+            <option value="adoption">Adoption — utilisation en cours</option>
+          </select>
+        </div>
+        <div id="adoption-fields" class="adoption-fields" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Date début d'adoption</label><input type="date" name="date_adoption" /></div>
+            <div class="form-group small"><label>Durée d'essai (jours)</label><input type="number" name="duree_essai" value="15" min="1" /></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Valeur estimée (€)</label><input type="number" name="valeur" placeholder="0" /></div>
+          <div class="form-group small"><label>Commission sales (%)</label><input type="number" name="commission_sales" value="50" /></div>
+          <div class="form-group small"><label>Commission manager (%)</label><input type="number" name="commission_manager" value="50" /></div>
+        </div>
+        <div class="form-group"><label>Note</label><textarea name="note" rows="2" placeholder="Informations clés…"></textarea></div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-compte">Annuler</button>
+          <button type="submit" class="btn-primary" id="submit-compte">Créer le compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONVERTIR EN CLIENT -->
+<div class="modal-overlay" id="modal-convertir">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Convertir en client</h2>
+      <button class="modal-close" data-close="modal-convertir">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">Renseignez les conditions financières du contrat signé.</p>
+      <form id="form-convertir" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group"><label>Prix mensuel (€/mois) *</label><input type="number" name="prix_mensuel" required placeholder="Ex : 2500" /></div>
+          <div class="form-group"><label>Frais de config (€)</label><input type="number" name="frais_config" placeholder="Ex : 5000" /></div>
+        </div>
+        <div id="preview-commission" class="commission-preview" style="display:none"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-convertir">Annuler</button>
+          <button type="submit" class="btn-success" id="submit-convertir">Confirmer la conversion</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉVÉNEMENT -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-event-title">Nouvel événement</h2>
+      <button class="modal-close" data-close="modal-event">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-event" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group"><label>Titre *</label><input type="text" name="titre" required placeholder="Ex : Démo produit" /></div>
+          <div class="form-group small"><label>Type</label><select name="type"><option value="rdv">RDV</option><option value="important">Important</option><option value="relance">Relance</option><option value="autre">Autre</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Date *</label><input type="date" name="date" required /></div>
+          <div class="form-group small"><label>Heure</label><input type="time" name="heure" /></div>
+        </div>
+        <div class="form-group"><label>Lieu</label><input type="text" name="lieu" placeholder="Ex : Paris 9e" /></div>
+        <div class="form-group"><label>Commentaire</label><textarea name="commentaire" rows="2" placeholder="Détails…"></textarea></div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-event">Annuler</button>
+          <button type="submit" class="btn-primary" id="submit-event">Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL ÉVÉNEMENT -->
+<div class="modal-overlay" id="modal-event-detail">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title" id="detail-titre"></h2>
+      <button class="modal-close" data-close="modal-event-detail">×</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-event">Supprimer</button>
+      <button class="btn-secondary" data-close="modal-event-detail">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
